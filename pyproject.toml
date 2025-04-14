@@ -1,0 +1,26 @@
+[project]
+name = "hightalent-reservation"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Your Carma",email = "y0urcarma@yandex.ru"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "fastapi[all] (>=0.115.12,<0.116.0)",
+    "alembic (>=1.15.2,<2.0.0)",
+    "asyncio (>=3.4.3,<4.0.0)",
+    "loguru (>=0.7.3,<0.8.0)",
+    "asyncpg (>=0.30.0,<0.31.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+yapf = "^0.43.0"
+

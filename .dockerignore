@@ -1,0 +1,3 @@
+app/tests
+.pylintrc
+.style.yapf
