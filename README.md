@@ -91,7 +91,7 @@ python main.py
 
 `docker-compose.yaml` состоит из трех контейнеров:
 
-1. `reservation-serivce` - сам сервис бронирования столиков
+1. `reservation-service` - сам сервис бронирования столиков
 2. `postgres` - СУБД PostgreSQL
 3. `portainer` - Portainer для графического взаимодействия
 
