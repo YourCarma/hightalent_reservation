@@ -6,8 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy import (
     select,
-    update,
-    BinaryExpression,
+    BinaryExpression
 )
 from sqlalchemy.dialects.postgresql import array
 
@@ -17,7 +16,7 @@ Model = TypeVar("Model", bound=Base)
 
 
 class DatabaseRepository(Generic[Model]):
-    """Repository for performing database queries."""
+    """Общий репозиторий работы с БД"""
 
     def __init__(self, model: type[Model], session: AsyncSession) -> None:
         self.model = model
@@ -120,69 +119,9 @@ class DatabaseRepository(Generic[Model]):
             return None
         return objects[0]
 
-    async def get_or_create_list(self, values: list) -> list[Model]:
-        return [await self.get_or_create(value) for value in values]
-
-    async def get_by_id_or_none_list(self, values: list) -> list[Model]:
-        return [
-            await self.get_by_id_or_none(value.get("id")) for value in values
-        ]
-
     async def get_all(self) -> list[Model]:
         return (await self.session.scalars(select(self.model))).all()
-
-    async def update_multiple_attrs(self, names: list[str], values: list[Any],
-                                    *expressions: BinaryExpression) -> Model:
-        scalar_object = (await self.session.scalars(
-            select(self.model).where(*expressions))).one()
-        await self.update_multiple_attrs_to_object(names=names,
-                                                   values=values,
-                                                   scalar_object=scalar_object)
-        return scalar_object
-
-    async def update_multiple_attrs_to_object(self, names: list[str],
-                                              values: list[Any],
-                                              scalar_object: Model) -> Model:
-        _ = [
-            setattr(scalar_object, name, value)
-            for name, value in zip(names, values)
-        ]
-        await self.session.flush()
-        return scalar_object
-
-    async def update_list(self, name: str, value: list, *expressions:
-                          BinaryExpression) -> Model:
-        """
-        Операция изменения атрибутов name объектов с конструкцией
-
-        class Object(Base)
-            name: Mapped(List[str])
-
-        Args:
-            name: название изменяемого аттрибута
-            value: список значений[any]
-            *expressions: условие нахождения единственного экземпляра модели self.model
-
-        Output:
-            ScalarResult это строка из таблицы self.model, представляет собой имененный объект
-        """
-        instance = (await self.session.scalars(
-            select(self.model).where(*expressions))).one()
-        setattr(instance, name, array(value))
-        await self.session.flush()
-        return instance
-
-    async def update(self, name: str, value: Any, *expressions:
-                     BinaryExpression) -> Model:
-        result = (await
-                  self.session.scalars(select(self.model).where(*expressions)
-                                       )).one()
-        setattr(
-            result, name, value
-        )  # нельзя так просто взять и изменить аттрибут (instance это не словарь, это scalar object)
-        await self.session.flush()
-        return result
-
+    
     async def delete_instance_list(self, instances) -> None:
         for instance in instances:
             await self.delete_instance(instance)

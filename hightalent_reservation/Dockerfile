@@ -8,6 +8,8 @@ RUN python3 -m pip install poetry
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-root --without dev
 
+RUN apt install curl -y
+
 COPY . .
 RUN sed -i 's/\r$//' startup.sh
 

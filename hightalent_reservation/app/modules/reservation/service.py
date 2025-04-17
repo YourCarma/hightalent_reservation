@@ -2,11 +2,11 @@ from fastapi import HTTPException, status
 from loguru import logger
 from sqlalchemy import and_, or_, func
 from sqlalchemy.orm.exc import NoResultFound
+from datetime import timedelta
 
 from unitofwork import AbstractUnitOfWork
 from modules.reservation.schemas import payload
 from api.dependencies import UOWReservation
-
 
 
 class TableReservationService:
