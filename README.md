@@ -51,7 +51,7 @@
 Клонирование сериса:
 
 ```
-git clone
+git clone https://github.com/YourCarma/hightalent_reservation.git
 ```
 
 ### Запуск сервиса вручную
