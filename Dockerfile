@@ -1,23 +1,15 @@
-FROM python:3.12 AS build
+FROM python:3.12-slim
 
-WORKDIR /database
+USER root
 
-# Виртуальное окружение для slim-версий
+WORKDIR /hightalent_reservation
 COPY pyproject.toml poetry.lock ./
-RUN pip install poetry 
-RUN poetry self update
+RUN python3 -m pip install poetry 
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-root --without dev
 
-RUN python -m venv /venv
-RUN . /venv/bin/activate && poetry install --no-root --without dev
-
-FROM python:3.12-slim AS production
 COPY . .
-COPY --from=build /venv /venv
-COPY startup.sh ./
-
-# Артефакт с переносами каретки в sh и bash
-# RUN sed -i 's/\r$//' startup.sh
-
-EXPOSE 8100
+RUN sed -i 's/\r$//' startup.sh
 
 ENTRYPOINT [ "/bin/sh", "./startup.sh" ]
+EXPOSE 8001

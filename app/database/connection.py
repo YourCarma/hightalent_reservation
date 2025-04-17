@@ -15,7 +15,8 @@ from database.base import Base
 from settings import settings
 
 factory_engine = create_async_engine(settings.DB_URL, echo=False)
-async_session_maker = async_sessionmaker(factory_engine, expire_on_commit=False)
+async_session_maker = async_sessionmaker(factory_engine,
+                                         expire_on_commit=False)
 
 
 async def migrate_tables() -> None:

@@ -5,7 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=Path(__file__).parent.parent.joinpath(".env.dev").__str__())
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).parent.parent.joinpath(".env.production").__str__())
     # Service configs
     HOST: Optional[str] = "0.0.0.0"
     PORT: Optional[int] = 65000
@@ -20,5 +21,6 @@ class Settings(BaseSettings):
     @property
     def DB_URL(cls):
         return f"postgresql+asyncpg://{cls.POSTGRES_USER}:{cls.POSTGRES_PASSWORD}@{cls.POSTGRES_HOST}:{cls.POSTGRES_PORT}/{cls.POSTGRES_DB}"
+
 
 settings = Settings()

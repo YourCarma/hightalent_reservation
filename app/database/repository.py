@@ -33,10 +33,11 @@ class DatabaseRepository(Generic[Model]):
             await self.session.flush()
             await self.session.refresh(instance)
             return instance
-        except (asyncpg.exceptions.UniqueViolationError, IntegrityError) as error:
-            logger.warning(f"Non unique-values, proceed next, details: \n{error}")
+        except (asyncpg.exceptions.UniqueViolationError,
+                IntegrityError) as error:
+            logger.warning(
+                f"Non unique-values, proceed next, details: \n{error}")
             await self.session.rollback()
-            return None
 
     async def filter(
         self,
@@ -53,11 +54,13 @@ class DatabaseRepository(Generic[Model]):
         *filtering_expression: BinaryExpression,
     ) -> Model:
         instance = self.model(**values)
-        object_ = (await self.session.scalars(select(self.model).where(*filtering_expression))).one_or_none()
+        object_ = (await self.session.scalars(
+            select(self.model).where(*filtering_expression))).one_or_none()
         if object_ is None:
             self.session.add(instance)
             await self.session.commit()
-            object_ = (await self.session.scalars(select(self.model).filter_by(**values))).one()
+            object_ = (await self.session.scalars(
+                select(self.model).filter_by(**values))).one()
         return object_
 
     async def get_by_id_or_none(
@@ -87,10 +90,12 @@ class DatabaseRepository(Generic[Model]):
     async def get_by_name_or_create(self, name: str, values: dict) -> Model:
         instance = self.model(**values)
         objects = await self.filter(self.model.name == name)
-        if len(objects) == 0:
+        if not objects:
             self.session.add(instance)
-            await self.session.commit()
             objects = await self.filter(self.model.name == name)
+        else:
+            logger.exception("Объект уже существует...Пропуск")
+            raise ValueError()
         return objects[0]
 
     async def get_or_create(self, values: dict) -> Model:
@@ -98,16 +103,19 @@ class DatabaseRepository(Generic[Model]):
         if isinstance(abstract_id, int):
             objects = await self.filter(self.model.id == abstract_id)
         else:
-            objects = (await self.session.scalars(select(self.model).filter_by(**values))).all()
+            objects = (await self.session.scalars(
+                select(self.model).filter_by(**values))).all()
         if len(objects) == 0:
             instance = self.model(**values)
             self.session.add(instance)
             await self.session.commit()
-            objects = (await self.session.scalars(select(self.model).filter_by(**values))).all()
+            objects = (await self.session.scalars(
+                select(self.model).filter_by(**values))).all()
         return objects[0]
 
     async def get_or_none(self, values: dict) -> Optional[Model]:
-        objects = (await self.session.scalars(select(self.model).filter_by(**values))).all()
+        objects = (await self.session.scalars(
+            select(self.model).filter_by(**values))).all()
         if len(objects) == 0:
             return None
         return objects[0]
@@ -116,22 +124,34 @@ class DatabaseRepository(Generic[Model]):
         return [await self.get_or_create(value) for value in values]
 
     async def get_by_id_or_none_list(self, values: list) -> list[Model]:
-        return [await self.get_by_id_or_none(value.get("id")) for value in values]
+        return [
+            await self.get_by_id_or_none(value.get("id")) for value in values
+        ]
 
     async def get_all(self) -> list[Model]:
         return (await self.session.scalars(select(self.model))).all()
 
-    async def update_multiple_attrs(self, names: list[str], values: list[Any], *expressions: BinaryExpression) -> Model:
-        scalar_object = (await self.session.scalars(select(self.model).where(*expressions))).one()
-        await self.update_multiple_attrs_to_object(names=names, values=values, scalar_object=scalar_object)
+    async def update_multiple_attrs(self, names: list[str], values: list[Any],
+                                    *expressions: BinaryExpression) -> Model:
+        scalar_object = (await self.session.scalars(
+            select(self.model).where(*expressions))).one()
+        await self.update_multiple_attrs_to_object(names=names,
+                                                   values=values,
+                                                   scalar_object=scalar_object)
         return scalar_object
 
-    async def update_multiple_attrs_to_object(self, names: list[str], values: list[Any], scalar_object: Model) -> Model:
-        _ = [setattr(scalar_object, name, value) for name, value in zip(names, values)]
+    async def update_multiple_attrs_to_object(self, names: list[str],
+                                              values: list[Any],
+                                              scalar_object: Model) -> Model:
+        _ = [
+            setattr(scalar_object, name, value)
+            for name, value in zip(names, values)
+        ]
         await self.session.flush()
         return scalar_object
 
-    async def update_list(self, name: str, value: list, *expressions: BinaryExpression) -> Model:
+    async def update_list(self, name: str, value: list, *expressions:
+                          BinaryExpression) -> Model:
         """
         Операция изменения атрибутов name объектов с конструкцией
 
@@ -146,13 +166,17 @@ class DatabaseRepository(Generic[Model]):
         Output:
             ScalarResult это строка из таблицы self.model, представляет собой имененный объект
         """
-        instance = (await self.session.scalars(select(self.model).where(*expressions))).one()
+        instance = (await self.session.scalars(
+            select(self.model).where(*expressions))).one()
         setattr(instance, name, array(value))
         await self.session.flush()
         return instance
 
-    async def update(self, name: str, value: Any, *expressions: BinaryExpression) -> Model:
-        result = (await self.session.scalars(select(self.model).where(*expressions))).one()
+    async def update(self, name: str, value: Any, *expressions:
+                     BinaryExpression) -> Model:
+        result = (await
+                  self.session.scalars(select(self.model).where(*expressions)
+                                       )).one()
         setattr(
             result, name, value
         )  # нельзя так просто взять и изменить аттрибут (instance это не словарь, это scalar object)
@@ -167,10 +191,14 @@ class DatabaseRepository(Generic[Model]):
     async def delete_instance(self, instance) -> None:
         await self.session.delete(instance)
         await self.session.flush()
-        await self.session.commit()
         return
 
     async def delete(self, *expressions: BinaryExpression) -> None:
-        result = (await self.session.scalars(select(self.model).where(*expressions))).one()
-        await self.delete_instance(result)
+        try:
+            result = (await self.session.scalars(
+                select(self.model).where(*expressions))).one()
+            await self.delete_instance(result)
+        except NoResultFound as e:
+            logger.error("Объекта на удаление не существует!")
+            raise NoResultFound()
         return
