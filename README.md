@@ -85,6 +85,8 @@ python main.py
 
 **Сервис запущен!** Теперь можно посмотреть документацию **OpenAPI** `http://{HOST}:{PORT}/docs`
 
+![1744897247162](image/README/1744897247162.png)
+
 ### Запуск сервиса с помощью docker-compose
 
 `docker-compose.yaml` состоит из трех контейнеров:
@@ -107,4 +109,4 @@ python main.py
 4. Наблюдаем наши сервисы
 5. **Готово!**
 
-   ![1744894111115](image/README/1744894111115.png)
+   ![1744894111115](hightalent_reservation/image/README/1744894111115.png)
